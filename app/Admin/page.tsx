@@ -51,7 +51,7 @@ export default function AdminPage() {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        window.location.href = "/Login"; 
+        window.location.href = "/login"; 
         return;
       }
 
