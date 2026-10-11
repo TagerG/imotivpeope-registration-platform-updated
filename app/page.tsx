@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { supabase } from "@/Lib/supabase";
 
 export default function Home() {
   const [showForm, setShowForm] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [registrationId, setRegistrationId] = useState("");
+  const [idCardNumber, setIdCardNumber] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const cleanFileName = (fileName: string) => {
@@ -35,161 +37,158 @@ export default function Home() {
     const form = e.currentTarget;
     const formData = new FormData(form);
 
+    let passportPath: string | null = null;
+    let validIdPath: string | null = null;
+
     try {
       /* =========================================================
-         GET FORM DATA
+         1. GET FORM DATA
       ========================================================= */
 
-      const fullName =
-        String(formData.get("full_name") || "").trim();
+      const fullName = String(
+        formData.get("full_name") || ""
+      ).trim();
 
-      const dateOfBirth =
-        String(formData.get("date_of_birth") || "");
+      const dateOfBirth = String(
+        formData.get("date_of_birth") || ""
+      );
 
-      const gender =
-        String(formData.get("gender") || "");
+      const gender = String(
+        formData.get("gender") || ""
+      );
 
-      const maritalStatus =
-        String(formData.get("marital_status") || "");
+      const maritalStatus = String(
+        formData.get("marital_status") || ""
+      );
 
-      const religion =
-        String(formData.get("religion") || "").trim();
+      const religion = String(
+        formData.get("religion") || ""
+      ).trim();
 
-      const phoneNumber =
-        String(formData.get("phone_number") || "").trim();
+      const phoneNumber = String(
+        formData.get("phone_number") || ""
+      ).trim();
 
-      const email =
-        String(formData.get("email") || "").trim();
+      const email = String(
+        formData.get("email") || ""
+      ).trim();
 
-      const state =
-        String(formData.get("state") || "").trim();
+      const state = String(
+        formData.get("state") || ""
+      ).trim();
 
-      const lga =
-        String(formData.get("lga") || "").trim();
+      const lga = String(
+        formData.get("lga") || ""
+      ).trim();
 
-      const ward =
-        String(formData.get("ward") || "").trim();
+      const ward = String(
+        formData.get("ward") || ""
+      ).trim();
 
-      const village =
-        String(formData.get("village") || "").trim();
+      const village = String(
+        formData.get("village") || ""
+      ).trim();
 
-      const kindred =
-        String(formData.get("kindred") || "").trim();
+      const kindred = String(
+        formData.get("kindred") || ""
+      ).trim();
 
-      const parentsName =
-        String(formData.get("parents_name") || "").trim();
+      const parentsName = String(
+        formData.get("parents_name") || ""
+      ).trim();
 
-      const zone =
-        String(formData.get("zone") || "");
+      const zone = String(
+        formData.get("zone") || ""
+      );
 
-      /* NEW: DISTRICT */
-      const district =
-        String(formData.get("district") || "").trim();
+      const district = String(
+        formData.get("district") || ""
+      ).trim();
 
-      /* NUMBER OF YEARS STAYED IN IMO STATE */
-      const yearsStayedInImoState =
-        String(
-          formData.get("years_stayed_in_imo_state") || ""
-        ).trim();
+      const yearsStayedInImoState = String(
+        formData.get("years_stayed_in_imo_state") || ""
+      ).trim();
 
-      const permanentHomeAddress =
-        String(
-          formData.get("permanent_home_address") || ""
-        ).trim();
+      const permanentHomeAddress = String(
+        formData.get("permanent_home_address") || ""
+      ).trim();
 
-      const residentialAddress =
-        String(
-          formData.get("residential_address") || ""
-        ).trim();
+      const residentialAddress = String(
+        formData.get("residential_address") || ""
+      ).trim();
 
-      const occupation =
-        String(formData.get("occupation") || "").trim();
+      const occupation = String(
+        formData.get("occupation") || ""
+      ).trim();
 
-      const organization =
-        String(formData.get("organization") || "").trim();
+      const organization = String(
+        formData.get("organization") || ""
+      ).trim();
 
-      /* EDUCATIONAL QUALIFICATION */
-      const educationalQualification =
-        String(
-          formData.get("educational_qualification") || ""
-        ).trim();
+      const educationalQualification = String(
+        formData.get("educational_qualification") || ""
+      ).trim();
 
-      const idType =
-        String(formData.get("id_type") || "");
+      /*
+       * ID type is fixed.
+       * The ID card number is generated by Supabase below.
+       */
+      const idType = "Others";
 
-      const idNumber =
-        String(formData.get("id_number") || "").trim();
+      const emergencyName = String(
+        formData.get("emergency_contact_name") || ""
+      ).trim();
 
-      const emergencyName =
-        String(
-          formData.get("emergency_contact_name") || ""
-        ).trim();
+      const emergencyPhone = String(
+        formData.get("emergency_contact_phone") || ""
+      ).trim();
 
-      const emergencyPhone =
-        String(
-          formData.get("emergency_contact_phone") || ""
-        ).trim();
+      const emergencyRelationship = String(
+        formData.get("emergency_relationship") || ""
+      ).trim();
 
-      const emergencyRelationship =
-        String(
-          formData.get("emergency_relationship") || ""
-        ).trim();
+      const nextOfKinPhone = String(
+        formData.get("next_of_kin_phone") || ""
+      ).trim();
 
-      const nextOfKinPhone =
-        String(
-          formData.get("next_of_kin_phone") || ""
-        ).trim();
+      /* =========================================================
+         2. GET OPTIONAL FILES
+      ========================================================= */
+
+      const passportValue = formData.get("passport_photo");
+      const validIdValue = formData.get("valid_id");
 
       const passportFile =
-        formData.get("passport_photo") as File | null;
+        passportValue instanceof File && passportValue.size > 0
+          ? passportValue
+          : null;
 
       const validIdFile =
-        formData.get("valid_id") as File | null;
+        validIdValue instanceof File && validIdValue.size > 0
+          ? validIdValue
+          : null;
 
       /* =========================================================
-         VALIDATE REQUIRED FILES
-      ========================================================= */
-
-      if (
-        !passportFile ||
-        !(passportFile instanceof File) ||
-        passportFile.size === 0
-      ) {
-        alert("Please upload a passport photograph.");
-        setIsSubmitting(false);
-        return;
-      }
-
-      if (
-        !validIdFile ||
-        !(validIdFile instanceof File) ||
-        validIdFile.size === 0
-      ) {
-        alert("Please upload a valid ID.");
-        setIsSubmitting(false);
-        return;
-      }
-
-      /* =========================================================
-         FILE SIZE CHECK
+         3. FILE SIZE VALIDATION
+         Files are optional, so validate only when supplied.
       ========================================================= */
 
       const maxFileSize = 50 * 1024 * 1024;
 
-      if (passportFile.size > maxFileSize) {
-        alert("Passport photograph is larger than 50 MB.");
-        setIsSubmitting(false);
+      if (passportFile && passportFile.size > maxFileSize) {
+        alert(
+          "Passport photograph is larger than 50 MB."
+        );
         return;
       }
 
-      if (validIdFile.size > maxFileSize) {
+      if (validIdFile && validIdFile.size > maxFileSize) {
         alert("Valid ID file is larger than 50 MB.");
-        setIsSubmitting(false);
         return;
       }
 
       /* =========================================================
-         FILE TYPE CHECK
+         4. PASSPORT FILE TYPE VALIDATION
       ========================================================= */
 
       const passportAllowedTypes = [
@@ -199,13 +198,19 @@ export default function Home() {
         "image/jpg",
       ];
 
-      if (!passportAllowedTypes.includes(passportFile.type)) {
+      if (
+        passportFile &&
+        !passportAllowedTypes.includes(passportFile.type)
+      ) {
         alert(
           "Passport photograph must be JPG, JPEG, PNG or WEBP."
         );
-        setIsSubmitting(false);
         return;
       }
+
+      /* =========================================================
+         5. VALID ID FILE TYPE VALIDATION
+      ========================================================= */
 
       const validIdAllowedTypes = [
         "image/jpeg",
@@ -216,136 +221,211 @@ export default function Home() {
       ];
 
       if (
+        validIdFile &&
         validIdFile.type &&
         !validIdAllowedTypes.includes(validIdFile.type)
       ) {
         alert(
           "Valid ID must be JPG, JPEG, PNG, WEBP or PDF."
         );
-        setIsSubmitting(false);
         return;
       }
 
       /* =========================================================
-         CREATE UNIQUE REGISTRATION FOLDER
+         6. CREATE UNIQUE REGISTRATION FOLDER
       ========================================================= */
 
       const registrationFolder = crypto.randomUUID();
 
       /* =========================================================
-         CLEAN FILE NAMES
+         7. UPLOAD OPTIONAL PASSPORT PHOTOGRAPH
       ========================================================= */
 
-      const passportFileName =
-        cleanFileName(passportFile.name);
-
-      const validIdFileName =
-        cleanFileName(validIdFile.name);
-
-      /* =========================================================
-         PASSPORT PHOTO PATH
-      ========================================================= */
-
-      const passportPath =
-        `${registrationFolder}/${passportFileName}`;
-
-      console.log(
-        "Uploading passport to:",
-        passportPath
-      );
-
-      /* =========================================================
-         UPLOAD PASSPORT PHOTO
-      ========================================================= */
-
-      const {
-        error: passportError,
-      } = await supabase.storage
-        .from("passport-photos")
-        .upload(
-          passportPath,
-          passportFile,
-          {
-            cacheControl: "3600",
-            upsert: false,
-            contentType:
-              passportFile.type || "image/jpeg",
-          }
+      if (passportFile) {
+        const passportFileName = cleanFileName(
+          passportFile.name
         );
 
-      if (passportError) {
-        console.error(
-          "PASSPORT UPLOAD ERROR:",
-          passportError
+        passportPath =
+          `${registrationFolder}/${passportFileName}`;
+
+        console.log(
+          "Uploading passport to:",
+          passportPath
         );
 
-        alert(
-          `Passport photograph upload failed.\n\n${passportError.message}`
-        );
+        const { error: passportError } =
+          await supabase.storage
+            .from("passport-photos")
+            .upload(
+              passportPath,
+              passportFile,
+              {
+                cacheControl: "3600",
+                upsert: false,
+                contentType:
+                  passportFile.type || "image/jpeg",
+              }
+            );
 
-        setIsSubmitting(false);
-        return;
+        if (passportError) {
+          console.error(
+            "PASSPORT UPLOAD ERROR:",
+            passportError
+          );
+
+          alert(
+            `Passport photograph upload failed.\n\n${passportError.message}`
+          );
+
+          return;
+        }
       }
 
       /* =========================================================
-         VALID ID PATH
+         8. UPLOAD OPTIONAL VALID ID
       ========================================================= */
 
-      const validIdPath =
-        `${registrationFolder}/${validIdFileName}`;
+      if (validIdFile) {
+        const validIdFileName = cleanFileName(
+          validIdFile.name
+        );
 
-      console.log(
-        "Uploading valid ID to:",
-        validIdPath
-      );
+        validIdPath =
+          `${registrationFolder}/${validIdFileName}`;
 
-      /* =========================================================
-         UPLOAD VALID ID
-      ========================================================= */
+        console.log(
+          "Uploading valid ID to:",
+          validIdPath
+        );
 
-      const {
-        error: validIdError,
-      } = await supabase.storage
-        .from("valid-ids")
-        .upload(
-          validIdPath,
-          validIdFile,
-          {
-            cacheControl: "3600",
-            upsert: false,
-            contentType:
-              validIdFile.type ||
-              "application/octet-stream",
+        const { error: validIdError } =
+          await supabase.storage
+            .from("valid-ids")
+            .upload(
+              validIdPath,
+              validIdFile,
+              {
+                cacheControl: "3600",
+                upsert: false,
+                contentType:
+                  validIdFile.type ||
+                  "application/octet-stream",
+              }
+            );
+
+        if (validIdError) {
+          console.error(
+            "VALID ID UPLOAD ERROR:",
+            validIdError
+          );
+
+          /*
+           * Clean up the passport upload if the optional
+           * valid ID upload fails.
+           */
+          if (passportPath) {
+            await supabase.storage
+              .from("passport-photos")
+              .remove([passportPath]);
           }
-        );
 
-      if (validIdError) {
-        console.error(
-          "VALID ID UPLOAD ERROR:",
-          validIdError
-        );
+          passportPath = null;
+          validIdPath = null;
 
-        await supabase.storage
-          .from("passport-photos")
-          .remove([passportPath]);
+          alert(
+            `Valid ID upload failed.\n\n${validIdError.message}`
+          );
 
-        alert(
-          `Valid ID upload failed.\n\n${validIdError.message}`
-        );
-
-        setIsSubmitting(false);
-        return;
+          return;
+        }
       }
 
       /* =========================================================
-         COMBINE EMERGENCY CONTACT INFORMATION
+         9. COMBINE EMERGENCY CONTACT INFORMATION
       ========================================================= */
 
       const emergencyContact =
         `${emergencyName} - ${emergencyPhone} - ${emergencyRelationship}`;
 
       /* =========================================================
-         GENERATE REGISTRATION ID
+         10. GENERATE SEQUENTIAL ID CARD NUMBER
+         Uses the PostgreSQL function created in Supabase.
+      ========================================================= */
+
+      const {
+        data: generatedIdNumber,
+        error: idNumberError,
+      } = await supabase.rpc(
+        "generate_imotiv_id_number"
+      );
+
+      if (idNumberError) {
+        console.error(
+          "ID CARD NUMBER GENERATION ERROR:",
+          idNumberError
+        );
+
+        /*
+         * Remove files uploaded for this registration
+         * if the ID card number cannot be generated.
+         */
+        if (passportPath) {
+          await supabase.storage
+            .from("passport-photos")
+            .remove([passportPath]);
+        }
+
+        if (validIdPath) {
+          await supabase.storage
+            .from("valid-ids")
+            .remove([validIdPath]);
+        }
+
+        passportPath = null;
+        validIdPath = null;
+
+        alert(
+          `The ID card number could not be generated.\n\n${idNumberError.message}`
+        );
+
+        return;
+      }
+
+      if (
+        typeof generatedIdNumber !== "string" ||
+        !/^IMP-ID-\d{6,}$/.test(generatedIdNumber)
+      ) {
+        console.error(
+          "Unexpected generated ID card number:",
+          generatedIdNumber
+        );
+
+        if (passportPath) {
+          await supabase.storage
+            .from("passport-photos")
+            .remove([passportPath]);
+        }
+
+        if (validIdPath) {
+          await supabase.storage
+            .from("valid-ids")
+            .remove([validIdPath]);
+        }
+
+        passportPath = null;
+        validIdPath = null;
+
+        alert(
+          "The system returned an invalid ID card number. Please try again."
+        );
+
+        return;
+      }
+
+      /* =========================================================
+         11. GENERATE EXISTING REGISTRATION ID
+         This remains separate from the sequential ID card number.
       ========================================================= */
 
       const generatedRegistrationId =
@@ -354,12 +434,10 @@ export default function Home() {
         )}`;
 
       /* =========================================================
-         SAVE REGISTRATION TO SUPABASE
+         12. SAVE REGISTRATION TO SUPABASE
       ========================================================= */
 
-      const {
-        error: databaseError,
-      } = await supabase
+      const { error: databaseError } = await supabase
         .from("people")
         .insert({
           /* Personal Information */
@@ -369,7 +447,7 @@ export default function Home() {
           marital_status: maritalStatus,
           religion: religion,
           phone_number: phoneNumber,
-          email: email,
+          email: email || null,
 
           /* Community Information */
           state: state,
@@ -403,9 +481,9 @@ export default function Home() {
 
           /* Identification */
           id_type: idType,
-          id_number: idNumber,
+          id_number: generatedIdNumber,
 
-          /* Uploaded Files */
+          /* Optional Uploaded Files */
           passport_url: passportPath,
           valid_id_url: validIdPath,
 
@@ -415,9 +493,8 @@ export default function Home() {
           /* Next of Kin */
           next_of_kin_phone: nextOfKinPhone,
 
-          /* Registration ID */
-          registration_id:
-            generatedRegistrationId,
+          /* Existing Registration ID */
+          registration_id: generatedRegistrationId,
         });
 
       if (databaseError) {
@@ -426,32 +503,36 @@ export default function Home() {
           databaseError
         );
 
-        /* Remove uploaded files if database save fails */
+        /* Remove uploaded files if database save fails. */
 
-        await supabase.storage
-          .from("passport-photos")
-          .remove([passportPath]);
+        if (passportPath) {
+          await supabase.storage
+            .from("passport-photos")
+            .remove([passportPath]);
+        }
 
-        await supabase.storage
-          .from("valid-ids")
-          .remove([validIdPath]);
+        if (validIdPath) {
+          await supabase.storage
+            .from("valid-ids")
+            .remove([validIdPath]);
+        }
+
+        passportPath = null;
+        validIdPath = null;
 
         alert(
           `Registration could not be saved.\n\n${databaseError.message}`
         );
 
-        setIsSubmitting(false);
         return;
       }
 
       /* =========================================================
-         SUCCESS
+         13. SUCCESS
       ========================================================= */
 
-      setRegistrationId(
-        generatedRegistrationId
-      );
-
+      setRegistrationId(generatedRegistrationId);
+      setIdCardNumber(generatedIdNumber);
       setSubmitted(true);
 
       form.reset();
@@ -461,6 +542,37 @@ export default function Home() {
         "REGISTRATION ERROR:",
         error
       );
+
+      /*
+       * Clean up any files uploaded before an unexpected error.
+       */
+      if (passportPath) {
+        const { error: cleanupError } =
+          await supabase.storage
+            .from("passport-photos")
+            .remove([passportPath]);
+
+        if (cleanupError) {
+          console.error(
+            "PASSPORT CLEANUP ERROR:",
+            cleanupError
+          );
+        }
+      }
+
+      if (validIdPath) {
+        const { error: cleanupError } =
+          await supabase.storage
+            .from("valid-ids")
+            .remove([validIdPath]);
+
+        if (cleanupError) {
+          console.error(
+            "VALID ID CLEANUP ERROR:",
+            cleanupError
+          );
+        }
+      }
 
       alert(
         "Something went wrong while processing the registration. Please try again."
@@ -474,1115 +586,1110 @@ export default function Home() {
   const resetRegistration = () => {
     setSubmitted(false);
     setRegistrationId("");
+    setIdCardNumber("");
   };
 
   const openRegistration = () => {
     setSubmitted(false);
     setRegistrationId("");
+    setIdCardNumber("");
     setShowForm(true);
   };
 
   return (
-    <main className="min-h-screen bg-slate-50">
+    <main className="min-h-screen bg-slate-50 md:flex">
 
       {/* =====================================================
-          HEADER
+          SIDEBAR
+          Desktop: fixed sidebar on the left.
+          Mobile: sidebar appears above the page content.
       ===================================================== */}
 
-      <header className="bg-blue-900 text-white shadow-md">
+      <aside className="relative z-40 flex w-full flex-col overflow-hidden bg-gradient-to-b from-slate-950 via-blue-950 to-blue-900 text-white shadow-xl md:fixed md:inset-y-0 md:left-0 md:h-screen md:w-64">
 
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
+        {/* SIDEBAR BRANDING */}
 
-          <div>
+        <div className="border-b border-white/10 px-6 py-7">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-500 text-xl font-extrabold text-white shadow-lg shadow-blue-950/40">
+              I
+            </div>
 
-            <h1 className="text-2xl font-bold">
-              Imotiv People
-            </h1>
+            <div>
+              <h1 className="text-xl font-extrabold tracking-tight">
+                Imotiv People
+              </h1>
 
-            <p className="text-sm text-blue-200">
-              People Registration Platform
-            </p>
-
+              <p className="mt-1 text-xs font-medium uppercase tracking-[0.18em] text-blue-200">
+                Registration Portal
+              </p>
+            </div>
           </div>
-
-          <button
-            type="button"
-            onClick={openRegistration}
-            className="rounded-lg bg-white px-5 py-2.5 font-semibold text-blue-900 shadow hover:bg-blue-50"
-          >
-            Register
-          </button>
-
         </div>
 
-      </header>
+        {/* SIDEBAR NAVIGATION */}
+
+        <div className="px-4 py-6">
+          <p className="mb-4 px-3 text-xs font-bold uppercase tracking-[0.2em] text-blue-300">
+            Navigation
+          </p>
+
+          <nav aria-label="Main navigation">
+            <Link
+              href="/Admin/"
+              className="group flex items-center justify-between rounded-xl border border-blue-400/30 bg-blue-500 px-4 py-4 text-white shadow-lg shadow-blue-950/30 transition duration-200 hover:border-blue-300 hover:bg-blue-400"
+            >
+              <span className="flex items-center gap-3">
+                {/* ADMIN ICON */}
+
+                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/15">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    className="h-6 w-6"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"
+                    />
+                    <circle
+                      cx="10"
+                      cy="7"
+                      r="4"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M20 8v6m3-3h-6"
+                    />
+                  </svg>
+                </span>
+
+                <span>
+                  <span className="block text-sm font-bold">
+                    Admin
+                  </span>
+
+                  <span className="mt-1 block text-xs text-blue-100">
+                    Administrator sign in
+                  </span>
+                </span>
+              </span>
+
+              {/* RIGHT ARROW */}
+
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="h-5 w-5 transition-transform group-hover:translate-x-1"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M5 12h14m-7-7 7 7-7 7"
+                />
+              </svg>
+            </Link>
+          </nav>
+        </div>
+
+        {/* SIDEBAR FOOTER */}
+
+        <div className="mt-auto border-t border-white/10 px-6 py-5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/10">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                className="h-5 w-5 text-blue-200"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 3 4 7v5c0 5 3.5 8 8 9 4.5-1 8-4 8-9V7l-8-4Z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="m9 12 2 2 4-4"
+                />
+              </svg>
+            </div>
+
+            <div>
+              <p className="text-sm font-semibold text-white">
+                People Registration
+              </p>
+
+              <p className="mt-1 text-xs text-blue-200">
+                Secure registration portal
+              </p>
+            </div>
+          </div>
+
+          <p className="mt-5 text-xs text-blue-300/80">
+            © 2026 Imotiv People
+          </p>
+        </div>
+      </aside>
 
       {/* =====================================================
-          HERO / LANDING PAGE
+          MAIN PAGE CONTENT
+          The left margin creates room for the desktop sidebar.
       ===================================================== */}
 
-      <section className="mx-auto max-w-7xl px-6 py-20">
+      <div className="min-w-0 flex-1 md:ml-64">
 
-        <div className="grid items-center gap-12 md:grid-cols-2">
+        {/* =====================================================
+            HEADER
+        ===================================================== */}
 
-          {/* LEFT SIDE */}
+        <header className="bg-blue-900 text-white shadow-md">
+          <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
+            <div>
+              <h1 className="text-2xl font-bold">
+                Imotiv People
+              </h1>
 
-          <div>
-
-            <span className="inline-block rounded-full bg-blue-100 px-4 py-2 text-sm font-semibold text-blue-800">
-              Official Registration Portal
-            </span>
-
-            <h2 className="mt-6 text-4xl font-bold leading-tight text-slate-900 md:text-5xl">
-              Simple, Secure & Reliable People Registration
-            </h2>
-
-            <p className="mt-6 text-lg leading-8 text-slate-600">
-              Register your personal, family, community and
-              identification information securely using the
-              Imotiv People Registration Platform.
-            </p>
+              <p className="text-sm text-blue-200">
+                People Registration Platform
+              </p>
+            </div>
 
             <button
               type="button"
               onClick={openRegistration}
-              className="mt-8 rounded-lg bg-blue-700 px-7 py-3.5 font-semibold text-white shadow-lg hover:bg-blue-800"
+              className="rounded-lg bg-white px-5 py-2.5 font-semibold text-blue-900 shadow hover:bg-blue-50"
             >
-              Start Registration
+              Register
             </button>
-
           </div>
+        </header>
 
-          {/* RIGHT SIDE */}
+        {/* =====================================================
+            HERO / LANDING PAGE
+        ===================================================== */}
 
-          <div className="rounded-2xl bg-white p-8 shadow-xl">
+        <section className="mx-auto max-w-7xl px-6 py-20">
+          <div className="grid items-center gap-12 md:grid-cols-2">
 
-            <div className="space-y-5">
+            {/* LEFT SIDE */}
 
-              <div className="rounded-xl bg-blue-50 p-5">
+            <div>
+              <span className="inline-block rounded-full bg-blue-100 px-4 py-2 text-sm font-semibold text-blue-800">
+                Official Registration Portal
+              </span>
 
-                <h3 className="font-bold text-blue-900">
-                  Personal Information
-                </h3>
+              <h2 className="mt-6 text-4xl font-bold leading-tight text-slate-900 md:text-5xl">
+                Simple, Secure & Reliable People Registration
+              </h2>
 
-                <p className="mt-2 text-sm text-slate-600">
-                  Securely collect important personal
-                  information.
-                </p>
+              <p className="mt-6 text-lg leading-8 text-slate-600">
+                Register your personal, family, community and
+                identification information securely using the
+                Imotiv People Registration Platform.
+              </p>
+
+              <button
+                type="button"
+                onClick={openRegistration}
+                className="mt-8 rounded-lg bg-blue-700 px-7 py-3.5 font-semibold text-white shadow-lg hover:bg-blue-800"
+              >
+                Start Registration
+              </button>
+            </div>
+
+            {/* RIGHT SIDE */}
+
+            <div className="rounded-2xl bg-white p-8 shadow-xl">
+              <div className="space-y-5">
+
+                <div className="rounded-xl bg-blue-50 p-5">
+                  <h3 className="font-bold text-blue-900">
+                    Personal Information
+                  </h3>
+
+                  <p className="mt-2 text-sm text-slate-600">
+                    Securely collect important personal
+                    information.
+                  </p>
+                </div>
+
+                <div className="rounded-xl bg-green-50 p-5">
+                  <h3 className="font-bold text-green-900">
+                    Community Information
+                  </h3>
+
+                  <p className="mt-2 text-sm text-slate-600">
+                    Record village, ward, kindred, family
+                    and zone information.
+                  </p>
+                </div>
+
+                <div className="rounded-xl bg-purple-50 p-5">
+                  <h3 className="font-bold text-purple-900">
+                    Secure Records
+                  </h3>
+
+                  <p className="mt-2 text-sm text-slate-600">
+                    Registration records will be securely
+                    stored and searchable.
+                  </p>
+                </div>
 
               </div>
-
-              <div className="rounded-xl bg-green-50 p-5">
-
-                <h3 className="font-bold text-green-900">
-                  Community Information
-                </h3>
-
-                <p className="mt-2 text-sm text-slate-600">
-                  Record village, ward, kindred, family
-                  and zone information.
-                </p>
-
-              </div>
-
-              <div className="rounded-xl bg-purple-50 p-5">
-
-                <h3 className="font-bold text-purple-900">
-                  Secure Records
-                </h3>
-
-                <p className="mt-2 text-sm text-slate-600">
-                  Registration records will be securely
-                  stored and searchable.
-                </p>
-
-              </div>
-
             </div>
 
           </div>
+        </section>
 
-        </div>
+        {/* =====================================================
+            REGISTRATION MODAL
+            z-50 ensures the form overlays the sidebar as well.
+        ===================================================== */}
 
-      </section>
+        {showForm && (
+          <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 px-4 py-8">
+            <div className="mx-auto w-full max-w-4xl rounded-2xl bg-white shadow-2xl">
 
-      {/* =====================================================
-          REGISTRATION MODAL
-      ===================================================== */}
+              {/* =================================================
+                  SUCCESS SCREEN
+              ================================================= */}
 
-      {showForm && (
+              {submitted ? (
+                <div className="p-10 text-center">
 
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 px-4 py-8">
+                  <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
+                    <span className="text-4xl font-bold text-green-600">
+                      ✓
+                    </span>
+                  </div>
 
-          <div className="mx-auto w-full max-w-4xl rounded-2xl bg-white shadow-2xl">
+                  <h2 className="mt-6 text-3xl font-bold text-slate-900">
+                    Registration Successful!
+                  </h2>
 
-            {/* =================================================
-                SUCCESS SCREEN
-            ================================================= */}
-
-            {submitted ? (
-
-              <div className="p-10 text-center">
-
-                <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
-
-                  <span className="text-4xl font-bold text-green-600">
-                    ✓
-                  </span>
-
-                </div>
-
-                <h2 className="mt-6 text-3xl font-bold text-slate-900">
-                  Registration Successful!
-                </h2>
-
-                <p className="mx-auto mt-3 max-w-md text-slate-600">
-                  The registration information has been
-                  received and saved successfully.
-                </p>
-
-                <div className="mx-auto mt-8 max-w-sm rounded-xl bg-blue-50 p-6">
-
-                  <p className="text-sm font-medium text-blue-700">
-                    Registration ID
+                  <p className="mx-auto mt-3 max-w-md text-slate-600">
+                    The registration information has been
+                    received and saved successfully.
                   </p>
 
-                  <p className="mt-2 text-2xl font-bold tracking-wide text-blue-900">
-                    {registrationId}
-                  </p>
+                  {/* EXISTING REGISTRATION ID */}
 
-                </div>
-
-                <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
-
-                  <button
-                    type="button"
-                    onClick={resetRegistration}
-                    className="rounded-lg bg-blue-700 px-6 py-3 font-semibold text-white hover:bg-blue-800"
-                  >
-                    Register Another Person
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      resetRegistration();
-                      setShowForm(false);
-                    }}
-                    className="rounded-lg border border-slate-300 px-6 py-3 font-semibold text-slate-700 hover:bg-slate-50"
-                  >
-                    Close
-                  </button>
-
-                </div>
-
-              </div>
-
-            ) : (
-
-              <>
-
-                {/* =============================================
-                    FORM HEADER
-                ============================================= */}
-
-                <div className="flex items-center justify-between rounded-t-2xl bg-blue-900 px-6 py-5 text-white">
-
-                  <div>
-
-                    <h2 className="text-2xl font-bold">
-                      People Registration Form
-                    </h2>
-
-                    <p className="mt-1 text-sm text-blue-200">
-                      Please provide accurate information.
+                  <div className="mx-auto mt-8 max-w-sm rounded-xl bg-blue-50 p-6">
+                    <p className="text-sm font-medium text-blue-700">
+                      Registration ID
                     </p>
 
+                    <p className="mt-2 text-2xl font-bold tracking-wide text-blue-900">
+                      {registrationId}
+                    </p>
+
+                    <p className="mt-2 text-xs text-blue-700">
+                      Your unique registration reference.
+                    </p>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => setShowForm(false)}
-                    className="text-3xl leading-none text-white hover:text-blue-200"
-                  >
-                    ×
-                  </button>
+                  {/* SEQUENTIAL ID CARD NUMBER */}
+
+                  <div className="mx-auto mt-4 max-w-sm rounded-xl border border-green-200 bg-green-50 p-6">
+                    <p className="text-sm font-medium text-green-700">
+                      Permanent ID Card Number
+                    </p>
+
+                    <p className="mt-2 text-2xl font-bold tracking-wide text-green-900">
+                      {idCardNumber}
+                    </p>
+
+                    <p className="mt-2 text-xs text-green-700">
+                      Keep this number for your Imotiv People ID card.
+                    </p>
+                  </div>
+
+                  <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
+                    <button
+                      type="button"
+                      onClick={resetRegistration}
+                      className="rounded-lg bg-blue-700 px-6 py-3 font-semibold text-white hover:bg-blue-800"
+                    >
+                      Register Another Person
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        resetRegistration();
+                        setShowForm(false);
+                      }}
+                      className="rounded-lg border border-slate-300 px-6 py-3 font-semibold text-slate-700 hover:bg-slate-50"
+                    >
+                      Close
+                    </button>
+                  </div>
 
                 </div>
+              ) : (
+                <>
+                  {/* =============================================
+                      FORM HEADER
+                  ============================================= */}
 
-                {/* =============================================
-                    FORM
-                ============================================= */}
+                  <div className="flex items-center justify-between rounded-t-2xl bg-blue-900 px-6 py-5 text-white">
+                    <div>
+                      <h2 className="text-2xl font-bold">
+                        People Registration Form
+                      </h2>
 
-                <form
-                  onSubmit={handleSubmit}
-                  className="space-y-8 p-6"
-                >
-
-                  {/* =========================================
-                      1. PERSONAL INFORMATION
-                  ========================================= */}
-
-                  <section>
-
-                    <div className="mb-5 border-b pb-3">
-
-                      <h3 className="text-xl font-bold text-slate-900">
-                        1. Personal Information
-                      </h3>
-
-                      <p className="text-sm text-slate-500">
-                        Basic information about the person
-                        being registered.
+                      <p className="mt-1 text-sm text-blue-200">
+                        Please provide accurate information.
                       </p>
-
                     </div>
 
-                    <div className="grid gap-5 md:grid-cols-2">
-
-                      <div className="md:col-span-2">
-
-                        <label className="mb-1 block text-sm font-semibold text-slate-700">
-                          Full Name (Surname first) *
-                        </label>
-
-                        <input
-                          type="text"
-                          name="full_name"
-                          placeholder="e.g. Smith, John Doe"
-                          required
-                          className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
-                        />
-
-                      </div>
-
-                      <div>
-
-                        <label className="mb-1 block text-sm font-semibold text-slate-700">
-                          Date of Birth *
-                        </label>
-
-                        <input
-                          type="date"
-                          name="date_of_birth"
-                          required
-                          className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
-                        />
-
-                      </div>
-
-                      <div>
-
-                        <label className="mb-1 block text-sm font-semibold text-slate-700">
-                          Gender *
-                        </label>
-
-                        <select
-                          name="gender"
-                          required
-                          className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-600"
-                        >
-
-                          <option value="">
-                            Select gender
-                          </option>
-
-                          <option value="Male">
-                            Male
-                          </option>
-
-                          <option value="Female">
-                            Female
-                          </option>
-
-                        </select>
-
-                      </div>
-
-                      <div>
-
-                        <label className="mb-1 block text-sm font-semibold text-slate-700">
-                          Marital Status *
-                        </label>
-
-                        <select
-                          name="marital_status"
-                          required
-                          className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-600"
-                        >
-
-                          <option value="">
-                            Select status
-                          </option>
-
-                          <option value="Single">
-                            Single
-                          </option>
-
-                          <option value="Married">
-                            Married
-                          </option>
-
-                          <option value="Divorced">
-                            Divorced
-                          </option>
-
-                          <option value="Widowed">
-                            Widowed
-                          </option>
-
-                        </select>
-
-                      </div>
-
-                      <div>
-
-                        <label className="mb-1 block text-sm font-semibold text-slate-700">
-                          Religion *
-                        </label>
-
-                        <input
-                          type="text"
-                          name="religion"
-                          placeholder="Enter religion"
-                          required
-                          className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
-                        />
-
-                      </div>
-
-                      <div>
-
-                        <label className="mb-1 block text-sm font-semibold text-slate-700">
-                          Phone Number *
-                        </label>
-
-                        <input
-                          type="tel"
-                          name="phone_number"
-                          placeholder="08012345678"
-                          required
-                          className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
-                        />
-
-                      </div>
-
-                      <div>
-
-                        <label className="mb-1 block text-sm font-semibold text-slate-700">
-                          Email Address *
-                        </label>
-
-                        <input
-                          type="email"
-                          name="email"
-                          placeholder="example@email.com"
-                          required
-                          className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
-                        />
-
-                      </div>
-
-                      {/* PASSPORT */}
-
-                      <div className="md:col-span-2">
-
-                        <label className="mb-1 block text-sm font-semibold text-slate-700">
-                          Passport Photograph *
-                        </label>
-
-                        <input
-                          type="file"
-                          name="passport_photo"
-                          accept="image/jpeg,image/png,image/webp"
-                          required
-                          className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3"
-                        />
-
-                        <p className="mt-1 text-xs text-slate-500">
-                          Upload a clear JPG, PNG or WEBP
-                          passport photograph.
-                        </p>
-
-                      </div>
-
-                    </div>
-
-                  </section>
-
-                  {/* =========================================
-                      2. ADDRESS & COMMUNITY INFORMATION
-                  ========================================= */}
-
-                  <section>
-
-                    <div className="mb-5 border-b pb-3">
-
-                      <h3 className="text-xl font-bold text-slate-900">
-                        2. Address & Community Information
-                      </h3>
-
-                      <p className="text-sm text-slate-500">
-                        Information about the person's
-                        community and family.
-                      </p>
-
-                    </div>
-
-                    <div className="grid gap-5 md:grid-cols-2">
-
-                      {/* STATE */}
-
-                      <div>
-
-                        <label className="mb-1 block text-sm font-semibold text-slate-700">
-                          State *
-                        </label>
-
-                        <input
-                          type="text"
-                          name="state"
-                          placeholder="Enter state"
-                          required
-                          className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
-                        />
-
-                      </div>
-
-                      {/* LGA */}
-
-                      <div>
-
-                        <label className="mb-1 block text-sm font-semibold text-slate-700">
-                          LGA *
-                        </label>
-
-                        <input
-                          type="text"
-                          name="lga"
-                          placeholder="Enter LGA"
-                          required
-                          className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
-                        />
-
-                      </div>
-
-                      {/* DISTRICT */}
-
-                      <div>
-
-                        <label className="mb-1 block text-sm font-semibold text-slate-700">
-                          District *
-                        </label>
-
-                        <input
-                          type="text"
-                          name="district"
-                          placeholder="Enter district"
-                          required
-                          className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
-                        />
-
-                        <p className="mt-1 text-xs text-slate-500">
-                          Enter the district where the person
-                          belongs or resides.
-                        </p>
-
-                      </div>
-
-                      {/* WARD */}
-
-                      <div>
-
-                        <label className="mb-1 block text-sm font-semibold text-slate-700">
-                          Ward *
-                        </label>
-
-                        <input
-                          type="text"
-                          name="ward"
-                          placeholder="Enter ward"
-                          required
-                          className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
-                        />
-
-                      </div>
-
-                      {/* VILLAGE */}
-
-                      <div>
-
-                        <label className="mb-1 block text-sm font-semibold text-slate-700">
-                          Village *
-                        </label>
-
-                        <input
-                          type="text"
-                          name="village"
-                          placeholder="Enter village"
-                          required
-                          className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
-                        />
-
-                      </div>
-
-                      {/* KINDRED */}
-
-                      <div>
-
-                        <label className="mb-1 block text-sm font-semibold text-slate-700">
-                          Kindred *
-                        </label>
-
-                        <input
-                          type="text"
-                          name="kindred"
-                          placeholder="Enter kindred"
-                          required
-                          className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
-                        />
-
-                      </div>
-
-                      {/* NAME OF PARENTS */}
-
-                      <div>
-
-                        <label className="mb-1 block text-sm font-semibold text-slate-700">
-                          Name of Parents *
-                        </label>
-
-                        <input
-                          type="text"
-                          name="parents_name"
-                          placeholder="Enter name of parents"
-                          required
-                          className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
-                        />
-
-                      </div>
-
-                      {/* ZONE */}
-
-                      <div>
-
-                        <label className="mb-1 block text-sm font-semibold text-slate-700">
-                          Zone *
-                        </label>
-
-                        <select
-                          name="zone"
-                          required
-                          className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-600"
-                        >
-
-                          <option value="">
-                            Select Zone
-                          </option>
-
-                          <option value="Zone A">
-                            Zone A
-                          </option>
-
-                          <option value="Zone B">
-                            Zone B
-                          </option>
-
-                          <option value="Zone C">
-                            Zone C
-                          </option>
-
-                          <option value="Zone D">
-                            Zone D
-                          </option>
-
-                        </select>
-
-                      </div>
-
-                      {/* NUMBER OF YEARS STAYED IN IMO STATE */}
-
-                      <div>
-
-                        <label className="mb-1 block text-sm font-semibold text-slate-700">
-                          Number of Years Stayed in Imo State *
-                        </label>
-
-                        <input
-                          type="number"
-                          name="years_stayed_in_imo_state"
-                          placeholder="e.g. 10"
-                          min="0"
-                          max="120"
-                          required
-                          className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
-                        />
-
-                        <p className="mt-1 text-xs text-slate-500">
-                          Enter the number of years the person
-                          has stayed in Imo State.
-                        </p>
-
-                      </div>
-
-                    </div>
-
-                  </section>
-
-                  {/* =========================================
-                      3. ADDRESSES
-                  ========================================= */}
-
-                  <section>
-
-                    <div className="mb-5 border-b pb-3">
-
-                      <h3 className="text-xl font-bold text-slate-900">
-                        3. Addresses
-                      </h3>
-
-                      <p className="text-sm text-slate-500">
-                        Provide the person's permanent home
-                        address and current residential address.
-                      </p>
-
-                    </div>
-
-                    <div className="grid gap-5 md:grid-cols-2">
-
-                      {/* PERMANENT HOME ADDRESS */}
-
-                      <div>
-
-                        <label className="mb-1 block text-sm font-semibold text-slate-700">
-                          Permanent Home Address *
-                        </label>
-
-                        <textarea
-                          rows={5}
-                          name="permanent_home_address"
-                          placeholder="Enter permanent home address"
-                          required
-                          className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
-                        />
-
-                      </div>
-
-                      {/* RESIDENTIAL ADDRESS */}
-
-                      <div>
-
-                        <label className="mb-1 block text-sm font-semibold text-slate-700">
-                          Residential Address *
-                        </label>
-
-                        <textarea
-                          rows={5}
-                          name="residential_address"
-                          placeholder="Enter current residential address"
-                          required
-                          className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
-                        />
-
-                      </div>
-
-                    </div>
-
-                  </section>
-
-                  {/* =========================================
-                      4. OCCUPATION & EDUCATION
-                  ========================================= */}
-
-                  <section>
-
-                    <div className="mb-5 border-b pb-3">
-
-                      <h3 className="text-xl font-bold text-slate-900">
-                        4. Occupation & Education
-                      </h3>
-
-                      <p className="text-sm text-slate-500">
-                        Provide the person's occupation,
-                        organisation and educational qualification.
-                      </p>
-
-                    </div>
-
-                    <div className="grid gap-5 md:grid-cols-2">
-
-                      {/* OCCUPATION */}
-
-                      <div>
-
-                        <label className="mb-1 block text-sm font-semibold text-slate-700">
-                          Occupation *
-                        </label>
-
-                        <input
-                          type="text"
-                          name="occupation"
-                          placeholder="Enter occupation"
-                          required
-                          className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
-                        />
-
-                      </div>
-
-                      {/* ORGANISATION */}
-
-                      <div>
-
-                        <label className="mb-1 block text-sm font-semibold text-slate-700">
-                          Organisation
-                        </label>
-
-                        <input
-                          type="text"
-                          name="organization"
-                          placeholder="Enter organisation"
-                          className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
-                        />
-
-                      </div>
-
-                      {/* EDUCATIONAL QUALIFICATION */}
-
-                      <div className="md:col-span-2">
-
-                        <label className="mb-1 block text-sm font-semibold text-slate-700">
-                          Educational Qualification *
-                        </label>
-
-                        <select
-                          name="educational_qualification"
-                          required
-                          className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-600"
-                        >
-
-                          <option value="">
-                            Select educational qualification
-                          </option>
-
-                          <option value="No Formal Education">
-                            No Formal Education
-                          </option>
-
-                          <option value="Primary School">
-                            Primary School
-                          </option>
-
-                          <option value="Secondary School">
-                            Secondary School
-                          </option>
-
-                          <option value="WAEC / NECO">
-                            WAEC / NECO
-                          </option>
-
-                          <option value="NCE">
-                            NCE
-                          </option>
-
-                          <option value="OND">
-                            OND
-                          </option>
-
-                          <option value="HND">
-                            HND
-                          </option>
-
-                          <option value="Bachelor's Degree">
-                            Bachelor&apos;s Degree
-                          </option>
-
-                          <option value="Postgraduate Diploma">
-                            Postgraduate Diploma
-                          </option>
-
-                          <option value="Master's Degree">
-                            Master&apos;s Degree
-                          </option>
-
-                          <option value="Doctorate / PhD">
-                            Doctorate / PhD
-                          </option>
-
-                          <option value="Professional Qualification">
-                            Professional Qualification
-                          </option>
-
-                          <option value="Other">
-                            Other
-                          </option>
-
-                        </select>
-
-                      </div>
-
-                    </div>
-
-                  </section>
-
-                  {/* =========================================
-                      5. IDENTIFICATION
-                  ========================================= */}
-
-                  <section>
-
-                    <div className="mb-5 border-b pb-3">
-
-                      <h3 className="text-xl font-bold text-slate-900">
-                        5. Identification
-                      </h3>
-
-                      <p className="text-sm text-slate-500">
-                        Provide a valid means of identification.
-                      </p>
-
-                    </div>
-
-                    <div className="grid gap-5 md:grid-cols-2">
-
-                      {/* ID TYPE */}
-
-                      <div>
-
-                        <label className="mb-1 block text-sm font-semibold text-slate-700">
-                          ID Type *
-                        </label>
-
-                        <select
-                          name="id_type"
-                          required
-                          className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-600"
-                        >
-
-                          <option value="">
-                            Select ID type
-                          </option>
-
-                          <option value="National ID / NIN">
-                            National ID / NIN
-                          </option>
-
-                          <option value="Voter's Card">
-                            Voter&apos;s Card
-                          </option>
-
-                          <option value="Driver's Licence">
-                            Driver&apos;s Licence
-                          </option>
-
-                          <option value="International Passport">
-                            International Passport
-                          </option>
-
-                          <option value="Other">
-                            Other
-                          </option>
-
-                        </select>
-
-                      </div>
-
-                      {/* ID NUMBER */}
-
-                      <div>
-
-                        <label className="mb-1 block text-sm font-semibold text-slate-700">
-                          ID Number *
-                        </label>
-
-                        <input
-                          type="text"
-                          name="id_number"
-                          placeholder="Enter ID number"
-                          required
-                          className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
-                        />
-
-                      </div>
-
-                      {/* VALID ID */}
-
-                      <div className="md:col-span-2">
-
-                        <label className="mb-1 block text-sm font-semibold text-slate-700">
-                          Upload Valid ID *
-                        </label>
-
-                        <input
-                          type="file"
-                          name="valid_id"
-                          accept="image/jpeg,image/png,image/webp,application/pdf"
-                          required
-                          className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3"
-                        />
-
-                        <p className="mt-1 text-xs text-slate-500">
-                          Accepted formats: JPG, JPEG, PNG,
-                          WEBP or PDF. Maximum file size:
-                          50 MB.
-                        </p>
-
-                      </div>
-
-                    </div>
-
-                  </section>
-
-                  {/* =========================================
-                      6. EMERGENCY CONTACT & NEXT OF KIN
-                  ========================================= */}
-
-                  <section>
-
-                    <div className="mb-5 border-b pb-3">
-
-                      <h3 className="text-xl font-bold text-slate-900">
-                        6. Emergency Contact & Next of Kin
-                      </h3>
-
-                    </div>
-
-                    <div className="grid gap-5 md:grid-cols-2">
-
-                      {/* EMERGENCY NAME */}
-
-                      <div>
-
-                        <label className="mb-1 block text-sm font-semibold text-slate-700">
-                          Emergency Contact Name *
-                        </label>
-
-                        <input
-                          type="text"
-                          name="emergency_contact_name"
-                          placeholder="Full name"
-                          required
-                          className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
-                        />
-
-                      </div>
-
-                      {/* EMERGENCY PHONE */}
-
-                      <div>
-
-                        <label className="mb-1 block text-sm font-semibold text-slate-700">
-                          Emergency Contact Phone *
-                        </label>
-
-                        <input
-                          type="tel"
-                          name="emergency_contact_phone"
-                          placeholder="08012345678"
-                          required
-                          className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
-                        />
-
-                      </div>
-
-                      {/* RELATIONSHIP */}
-
-                      <div>
-
-                        <label className="mb-1 block text-sm font-semibold text-slate-700">
-                          Relationship to Registrant *
-                        </label>
-
-                        <input
-                          type="text"
-                          name="emergency_relationship"
-                          placeholder="e.g. Brother, Sister, Father, Mother"
-                          required
-                          className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
-                        />
-
-                      </div>
-
-                      {/* NEXT OF KIN PHONE */}
-
-                      <div>
-
-                        <label className="mb-1 block text-sm font-semibold text-slate-700">
-                          Next of Kin Phone Number *
-                        </label>
-
-                        <input
-                          type="tel"
-                          name="next_of_kin_phone"
-                          placeholder="08012345678"
-                          required
-                          className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
-                        />
-
-                      </div>
-
-                    </div>
-
-                  </section>
-
-                  {/* =========================================
-                      SUBMIT
-                  ========================================= */}
-
-                  <div className="border-t pt-6">
-
-                    <div className="rounded-lg bg-blue-50 p-4 text-sm text-blue-800">
-
-                      <strong>Important:</strong>{" "}
-                      Please check that all information
-                      provided is accurate before submitting.
-
-                    </div>
-
-                    <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-end">
-
-                      <button
-                        type="button"
-                        onClick={() => setShowForm(false)}
-                        disabled={isSubmitting}
-                        className="rounded-lg border border-slate-300 px-6 py-3 font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-                      >
-                        Cancel
-                      </button>
-
-                      <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="rounded-lg bg-blue-700 px-7 py-3 font-semibold text-white shadow hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        {isSubmitting
-                          ? "Submitting..."
-                          : "Submit Registration"}
-                      </button>
-
-                    </div>
-
+                    <button
+                      type="button"
+                      onClick={() => setShowForm(false)}
+                      className="text-3xl leading-none text-white hover:text-blue-200"
+                      aria-label="Close registration form"
+                    >
+                      ×
+                    </button>
                   </div>
 
-                </form>
+                  {/* =============================================
+                      FORM
+                  ============================================= */}
 
-              </>
+                  <form
+                    onSubmit={handleSubmit}
+                    className="space-y-8 p-6"
+                  >
 
-            )}
+                    {/* =========================================
+                        1. PERSONAL INFORMATION
+                    ========================================= */}
 
+                    <section>
+                      <div className="mb-5 border-b pb-3">
+                        <h3 className="text-xl font-bold text-slate-900">
+                          1. Personal Information
+                        </h3>
+
+                        <p className="text-sm text-slate-500">
+                          Basic information about the person
+                          being registered.
+                        </p>
+                      </div>
+
+                      <div className="grid gap-5 md:grid-cols-2">
+
+                        <div className="md:col-span-2">
+                          <label className="mb-1 block text-sm font-semibold text-slate-700">
+                            Full Name (Surname first) *
+                          </label>
+
+                          <input
+                            type="text"
+                            name="full_name"
+                            placeholder="e.g. Smith, John Doe"
+                            required
+                            className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block text-sm font-semibold text-slate-700">
+                            Date of Birth *
+                          </label>
+
+                          <input
+                            type="date"
+                            name="date_of_birth"
+                            required
+                            className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block text-sm font-semibold text-slate-700">
+                            Gender *
+                          </label>
+
+                          <select
+                            name="gender"
+                            required
+                            className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-600"
+                          >
+                            <option value="">
+                              Select gender
+                            </option>
+
+                            <option value="Male">
+                              Male
+                            </option>
+
+                            <option value="Female">
+                              Female
+                            </option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block text-sm font-semibold text-slate-700">
+                            Marital Status *
+                          </label>
+
+                          <select
+                            name="marital_status"
+                            required
+                            className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-600"
+                          >
+                            <option value="">
+                              Select status
+                            </option>
+
+                            <option value="Single">
+                              Single
+                            </option>
+
+                            <option value="Married">
+                              Married
+                            </option>
+
+                            <option value="Divorced">
+                              Divorced
+                            </option>
+
+                            <option value="Widowed">
+                              Widowed
+                            </option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block text-sm font-semibold text-slate-700">
+                            Religion *
+                          </label>
+
+                          <input
+                            type="text"
+                            name="religion"
+                            placeholder="Enter religion"
+                            required
+                            className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block text-sm font-semibold text-slate-700">
+                            Phone Number *
+                          </label>
+
+                          <input
+                            type="tel"
+                            name="phone_number"
+                            placeholder="08012345678"
+                            required
+                            className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
+                          />
+                        </div>
+
+                        {/* OPTIONAL EMAIL */}
+
+                        <div>
+                          <label className="mb-1 block text-sm font-semibold text-slate-700">
+                            Email Address (Optional)
+                          </label>
+
+                          <input
+                            type="email"
+                            name="email"
+                            placeholder="example@email.com"
+                            className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
+                          />
+                        </div>
+
+                        {/* OPTIONAL PASSPORT */}
+
+                        <div className="md:col-span-2">
+                          <label className="mb-1 block text-sm font-semibold text-slate-700">
+                            Passport Photograph (Optional)
+                          </label>
+
+                          <input
+                            type="file"
+                            name="passport_photo"
+                            accept="image/jpeg,image/png,image/webp"
+                            className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3"
+                          />
+
+                          <p className="mt-1 text-xs text-slate-500">
+                            Optional. Upload a clear JPG, PNG or
+                            WEBP passport photograph. Maximum
+                            file size: 50 MB.
+                          </p>
+                        </div>
+
+                      </div>
+                    </section>
+
+                    {/* =========================================
+                        2. ADDRESS & COMMUNITY INFORMATION
+                    ========================================= */}
+
+                    <section>
+                      <div className="mb-5 border-b pb-3">
+                        <h3 className="text-xl font-bold text-slate-900">
+                          2. Address & Community Information
+                        </h3>
+
+                        <p className="text-sm text-slate-500">
+                          Information about the person's
+                          community and family.
+                        </p>
+                      </div>
+
+                      <div className="grid gap-5 md:grid-cols-2">
+
+                        <div>
+                          <label className="mb-1 block text-sm font-semibold text-slate-700">
+                            State *
+                          </label>
+
+                          <input
+                            type="text"
+                            name="state"
+                            placeholder="Enter state"
+                            required
+                            className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block text-sm font-semibold text-slate-700">
+                            LGA *
+                          </label>
+
+                          <input
+                            type="text"
+                            name="lga"
+                            placeholder="Enter LGA"
+                            required
+                            className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block text-sm font-semibold text-slate-700">
+                            District *
+                          </label>
+
+                          <input
+                            type="text"
+                            name="district"
+                            placeholder="Enter district"
+                            required
+                            className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
+                          />
+
+                          <p className="mt-1 text-xs text-slate-500">
+                            Enter the district where the person
+                            belongs or resides.
+                          </p>
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block text-sm font-semibold text-slate-700">
+                            Ward *
+                          </label>
+
+                          <input
+                            type="text"
+                            name="ward"
+                            placeholder="Enter ward"
+                            required
+                            className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block text-sm font-semibold text-slate-700">
+                            Village *
+                          </label>
+
+                          <input
+                            type="text"
+                            name="village"
+                            placeholder="Enter village"
+                            required
+                            className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block text-sm font-semibold text-slate-700">
+                            Kindred *
+                          </label>
+
+                          <input
+                            type="text"
+                            name="kindred"
+                            placeholder="Enter kindred"
+                            required
+                            className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block text-sm font-semibold text-slate-700">
+                            Name of Parents *
+                          </label>
+
+                          <input
+                            type="text"
+                            name="parents_name"
+                            placeholder="Enter name of parents"
+                            required
+                            className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block text-sm font-semibold text-slate-700">
+                            Zone *
+                          </label>
+
+                          <select
+                            name="zone"
+                            required
+                            className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-600"
+                          >
+                            <option value="">
+                              Select Zone
+                            </option>
+
+                            <option value="Zone A">
+                              Zone A
+                            </option>
+
+                            <option value="Zone B">
+                              Zone B
+                            </option>
+
+                            <option value="Zone C">
+                              Zone C
+                            </option>
+
+                            <option value="Zone D">
+                              Zone D
+                            </option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block text-sm font-semibold text-slate-700">
+                            Number of Years Stayed in Imo State *
+                          </label>
+
+                          <input
+                            type="number"
+                            name="years_stayed_in_imo_state"
+                            placeholder="e.g. 10"
+                            min="0"
+                            max="120"
+                            required
+                            className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
+                          />
+
+                          <p className="mt-1 text-xs text-slate-500">
+                            Enter the number of years the person
+                            has stayed in Imo State.
+                          </p>
+                        </div>
+
+                      </div>
+                    </section>
+
+                    {/* =========================================
+                        3. ADDRESSES
+                    ========================================= */}
+
+                    <section>
+                      <div className="mb-5 border-b pb-3">
+                        <h3 className="text-xl font-bold text-slate-900">
+                          3. Addresses
+                        </h3>
+
+                        <p className="text-sm text-slate-500">
+                          Provide the person's permanent home
+                          address and current residential address.
+                        </p>
+                      </div>
+
+                      <div className="grid gap-5 md:grid-cols-2">
+
+                        <div>
+                          <label className="mb-1 block text-sm font-semibold text-slate-700">
+                            Permanent Home Address *
+                          </label>
+
+                          <textarea
+                            rows={5}
+                            name="permanent_home_address"
+                            placeholder="Enter permanent home address"
+                            required
+                            className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block text-sm font-semibold text-slate-700">
+                            Residential Address *
+                          </label>
+
+                          <textarea
+                            rows={5}
+                            name="residential_address"
+                            placeholder="Enter current residential address"
+                            required
+                            className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
+                          />
+                        </div>
+
+                      </div>
+                    </section>
+
+                    {/* =========================================
+                        4. OCCUPATION & EDUCATION
+                    ========================================= */}
+
+                    <section>
+                      <div className="mb-5 border-b pb-3">
+                        <h3 className="text-xl font-bold text-slate-900">
+                          4. Occupation & Education
+                        </h3>
+
+                        <p className="text-sm text-slate-500">
+                          Provide the person's occupation,
+                          organisation and educational qualification.
+                        </p>
+                      </div>
+
+                      <div className="grid gap-5 md:grid-cols-2">
+
+                        <div>
+                          <label className="mb-1 block text-sm font-semibold text-slate-700">
+                            Occupation *
+                          </label>
+
+                          <input
+                            type="text"
+                            name="occupation"
+                            placeholder="Enter occupation"
+                            required
+                            className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block text-sm font-semibold text-slate-700">
+                            Organisation
+                          </label>
+
+                          <input
+                            type="text"
+                            name="organization"
+                            placeholder="Enter organisation"
+                            className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
+                          />
+                        </div>
+
+                        <div className="md:col-span-2">
+                          <label className="mb-1 block text-sm font-semibold text-slate-700">
+                            Educational Qualification *
+                          </label>
+
+                          <select
+                            name="educational_qualification"
+                            required
+                            className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-600"
+                          >
+                            <option value="">
+                              Select educational qualification
+                            </option>
+
+                            <option value="No Formal Education">
+                              No Formal Education
+                            </option>
+
+                            <option value="Primary School">
+                              Primary School
+                            </option>
+
+                            <option value="Secondary School">
+                              Secondary School
+                            </option>
+
+                            <option value="WAEC / NECO">
+                              WAEC / NECO
+                            </option>
+
+                            <option value="NCE">
+                              NCE
+                            </option>
+
+                            <option value="OND">
+                              OND
+                            </option>
+
+                            <option value="HND">
+                              HND
+                            </option>
+
+                            <option value="Bachelor's Degree">
+                              Bachelor&apos;s Degree
+                            </option>
+
+                            <option value="Postgraduate Diploma">
+                              Postgraduate Diploma
+                            </option>
+
+                            <option value="Master's Degree">
+                              Master&apos;s Degree
+                            </option>
+
+                            <option value="Doctorate / PhD">
+                              Doctorate / PhD
+                            </option>
+
+                            <option value="Professional Qualification">
+                              Professional Qualification
+                            </option>
+
+                            <option value="Other">
+                              Other
+                            </option>
+                          </select>
+                        </div>
+
+                      </div>
+                    </section>
+
+                    {/* =========================================
+                        5. IDENTIFICATION
+                    ========================================= */}
+
+                    <section>
+                      <div className="mb-5 border-b pb-3">
+                        <h3 className="text-xl font-bold text-slate-900">
+                          5. Identification
+                        </h3>
+
+                        <p className="text-sm text-slate-500">
+                          Your ID card number will be generated
+                          automatically during registration.
+                        </p>
+                      </div>
+
+                      <div className="grid gap-5 md:grid-cols-2">
+
+                        {/* FIXED ID TYPE */}
+
+                        <div>
+                          <label className="mb-1 block text-sm font-semibold text-slate-700">
+                            ID Type
+                          </label>
+
+                          <input
+                            type="text"
+                            value="Others"
+                            readOnly
+                            className="w-full cursor-not-allowed rounded-lg border border-slate-300 bg-slate-100 px-4 py-3 text-slate-700 outline-none"
+                          />
+
+                          <p className="mt-1 text-xs text-slate-500">
+                            This field is fixed as Others.
+                          </p>
+                        </div>
+
+                        {/* AUTOMATIC ID NUMBER */}
+
+                        <div>
+                          <label className="mb-1 block text-sm font-semibold text-slate-700">
+                            ID Card Number
+                          </label>
+
+                          <input
+                            type="text"
+                            value="Generated automatically"
+                            readOnly
+                            className="w-full cursor-not-allowed rounded-lg border border-slate-300 bg-slate-100 px-4 py-3 text-slate-500 outline-none"
+                          />
+
+                          <p className="mt-1 text-xs text-slate-500">
+                            A unique sequential number will be
+                            assigned when registration is submitted.
+                          </p>
+                        </div>
+
+                        {/* OPTIONAL VALID ID */}
+
+                        <div className="md:col-span-2">
+                          <label className="mb-1 block text-sm font-semibold text-slate-700">
+                            Upload Valid ID (Optional)
+                          </label>
+
+                          <input
+                            type="file"
+                            name="valid_id"
+                            accept="image/jpeg,image/png,image/webp,application/pdf"
+                            className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3"
+                          />
+
+                          <p className="mt-1 text-xs text-slate-500">
+                            Optional. Accepted formats: JPG, JPEG,
+                            PNG, WEBP or PDF. Maximum file size:
+                            50 MB.
+                          </p>
+                        </div>
+
+                      </div>
+                    </section>
+
+                    {/* =========================================
+                        6. EMERGENCY CONTACT & NEXT OF KIN
+                    ========================================= */}
+
+                    <section>
+                      <div className="mb-5 border-b pb-3">
+                        <h3 className="text-xl font-bold text-slate-900">
+                          6. Emergency Contact & Next of Kin
+                        </h3>
+                      </div>
+
+                      <div className="grid gap-5 md:grid-cols-2">
+
+                        <div>
+                          <label className="mb-1 block text-sm font-semibold text-slate-700">
+                            Emergency Contact Name *
+                          </label>
+
+                          <input
+                            type="text"
+                            name="emergency_contact_name"
+                            placeholder="Full name"
+                            required
+                            className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block text-sm font-semibold text-slate-700">
+                            Emergency Contact Phone *
+                          </label>
+
+                          <input
+                            type="tel"
+                            name="emergency_contact_phone"
+                            placeholder="08012345678"
+                            required
+                            className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block text-sm font-semibold text-slate-700">
+                            Relationship to Registrant *
+                          </label>
+
+                          <input
+                            type="text"
+                            name="emergency_relationship"
+                            placeholder="e.g. Brother, Sister, Father, Mother"
+                            required
+                            className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block text-sm font-semibold text-slate-700">
+                            Next of Kin Phone Number *
+                          </label>
+
+                          <input
+                            type="tel"
+                            name="next_of_kin_phone"
+                            placeholder="08012345678"
+                            required
+                            className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-blue-600"
+                          />
+                        </div>
+
+                      </div>
+                    </section>
+
+                    {/* =========================================
+                        SUBMIT
+                    ========================================= */}
+
+                    <div className="border-t pt-6">
+                      <div className="rounded-lg bg-blue-50 p-4 text-sm text-blue-800">
+                        <strong>Important:</strong>{" "}
+                        Please check that all information
+                        provided is accurate before submitting.
+                      </div>
+
+                      <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-end">
+                        <button
+                          type="button"
+                          onClick={() => setShowForm(false)}
+                          disabled={isSubmitting}
+                          className="rounded-lg border border-slate-300 px-6 py-3 font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                        >
+                          Cancel
+                        </button>
+
+                        <button
+                          type="submit"
+                          disabled={isSubmitting}
+                          className="rounded-lg bg-blue-700 px-7 py-3 font-semibold text-white shadow hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {isSubmitting
+                            ? "Submitting..."
+                            : "Submit Registration"}
+                        </button>
+                      </div>
+                    </div>
+
+                  </form>
+                </>
+              )}
+
+            </div>
           </div>
+        )}
 
-        </div>
+        {/* =====================================================
+            FOOTER
+        ===================================================== */}
 
-      )}
+        <footer className="border-t bg-white py-6 text-center text-sm text-slate-500">
+          © 2026 Imotiv People Registration Platform
+        </footer>
 
-      {/* =====================================================
-          FOOTER
-      ===================================================== */}
-
-      <footer className="border-t bg-white py-6 text-center text-sm text-slate-500">
-        © 2026 Imotiv People Registration Platform
-      </footer>
-
+      </div>
     </main>
   );
 }
